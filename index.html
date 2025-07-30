@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Work Calendar</title>
   <style>
-    /* Add your styles here */
     #login-section { position: absolute; top: 10px; right: 10px; }
     #login-form { display: none; background: #fff; padding: 10px; border: 1px solid #ccc; }
     #logout-btn { display: none; }
+    .admin-only { display: none; }
   </style>
 </head>
 <body>
@@ -21,7 +21,36 @@
       <button type="submit">Login</button>
     </form>
   </div>
-  <!-- ... rest of your calendar and app ... -->
+
+  <!-- Calendar and Availability: ALWAYS VISIBLE -->
+  <div id="calendar-section">
+    <h1>Work Calendar</h1>
+    <!-- Your calendar rendering here -->
+    <div id="calendar">
+      <!-- Example calendar table (replace with your real calendar code) -->
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Monday</th>
+            <th>Tuesday</th>
+            <th>...</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body">
+          <!-- Calendar data populated by app.js -->
+        </tbody>
+      </table>
+    </div>
+    <!-- Admin-only controls (hidden for non-admins) -->
+    <div class="admin-only" id="admin-controls">
+      <button id="edit-btn">Edit Availability</button>
+      <button id="add-btn">Add Name</button>
+      <button id="remove-btn">Remove Name</button>
+      <!-- more admin controls as needed -->
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
