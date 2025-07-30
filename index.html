@@ -2,41 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Availability Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Team Work Calendar</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Team Work Calendar</h1>
-  <div id="app-container">
-    <div id="worker-section">
-      <h2>Workers</h2>
-      <input type="text" id="worker-name-input" placeholder="Enter worker's name">
-      <button id="add-worker-btn">Add Worker</button>
-      <ul id="worker-list"></ul>
-    </div>
-    <div id="calendar-section">
-      <div id="calendar-controls">
-        <button id="prev-month">&lt;</button>
-        <span id="calendar-month"></span>
-        <button id="next-month">&gt;</button>
-      </div>
-      <div id="calendar-grid"></div>
-    </div>
+  <h1>Availability Calendar</h1>
+  <div id="controls">
+    <input type="text" id="name-input" placeholder="Enter your name">
+    <button id="add-name-btn">Add Name</button>
+    <select id="user-select"></select>
   </div>
-  <div id="modal-background" class="hidden">
-    <div id="availability-modal">
-      <h3 id="modal-title"></h3>
-      <label>
-        Availability:
-        <input type="text" id="availability-input" placeholder="e.g., 9am-5pm, Off, etc.">
-      </label>
-      <div id="modal-buttons">
-        <button id="save-availability-btn">Save</button>
-        <button id="cancel-availability-btn">Cancel</button>
-      </div>
-    </div>
+  <div id="calendar-controls">
+    <button id="prev-month-btn">&lt; Prev</button>
+    <span id="month-label"></span>
+    <button id="next-month-btn">Next &gt;</button>
   </div>
+  <div id="calendar"></div>
   <script src="script.js"></script>
 </body>
 </html>
