@@ -16,6 +16,7 @@ let viewMonth = START_MONTH;
 const nameInput = document.getElementById("name-input");
 const addNameBtn = document.getElementById("add-name-btn");
 const userSelect = document.getElementById("user-select");
+const removeNameBtn = document.getElementById("remove-name-btn");
 const monthLabel = document.getElementById("month-label");
 const prevMonthBtn = document.getElementById("prev-month-btn");
 const nextMonthBtn = document.getElementById("next-month-btn");
@@ -45,6 +46,7 @@ function renderUserSelect() {
   });
   userSelect.value = selectedUser || "";
   userSelect.style.display = users.length ? "" : "none";
+  removeNameBtn.style.display = users.length ? "" : "none";
 }
 
 function renderCalendar() {
@@ -145,6 +147,23 @@ addNameBtn.onclick = () => {
 
 userSelect.onchange = () => {
   selectedUser = userSelect.value;
+  renderCalendar();
+};
+
+removeNameBtn.onclick = () => {
+  if (!selectedUser) return;
+  if (!confirm(`Remove "${selectedUser}" and all their availability?`)) return;
+  // Remove user
+  users = users.filter(u => u !== selectedUser);
+  // Remove all availability for this user
+  Object.keys(avail).forEach(key => {
+    if (key.endsWith(`|${selectedUser}`)) {
+      delete avail[key];
+    }
+  });
+  selectedUser = users.length ? users[0] : null;
+  saveState();
+  renderUserSelect();
   renderCalendar();
 };
 
