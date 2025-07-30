@@ -1,208 +1,171 @@
-// --- Helpers for date calculations ---
-function getMonthName(month, year) {
-  return new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+// --- CONFIGURATION ---
+const START_YEAR = 2025;
+const START_MONTH = 7; // 0-indexed, so 7 = August
+const END_YEAR = 2026;
+const END_MONTH = 7; // 0-indexed, so 7 = August
+
+// --- STATE ---
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+let avail = JSON.parse(localStorage.getItem("availability") || "{}");
+let selectedUser = users.length ? users[0] : null;
+
+let viewYear = START_YEAR;
+let viewMonth = START_MONTH;
+
+// --- DOM ELEMENTS ---
+const nameInput = document.getElementById("name-input");
+const addNameBtn = document.getElementById("add-name-btn");
+const userSelect = document.getElementById("user-select");
+const monthLabel = document.getElementById("month-label");
+const prevMonthBtn = document.getElementById("prev-month-btn");
+const nextMonthBtn = document.getElementById("next-month-btn");
+const calendarDiv = document.getElementById("calendar");
+
+// --- FUNCTIONS ---
+
+function monthYearInRange(year, month) {
+  if (year < START_YEAR || year > END_YEAR) return false;
+  if (year === START_YEAR && month < START_MONTH) return false;
+  if (year === END_YEAR && month > END_MONTH) return false;
+  return true;
 }
 
-function getDaysInMonth(month, year) {
-  return new Date(year, month + 1, 0).getDate();
+function saveState() {
+  localStorage.setItem("users", JSON.stringify(users));
+  localStorage.setItem("availability", JSON.stringify(avail));
 }
 
-function getFirstDayOfWeek(month, year) {
-  return new Date(year, month, 1).getDay();
-}
-
-function isToday(day, month, year) {
-  const now = new Date();
-  return day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
-}
-
-// --- State and Storage ---
-function loadState() {
-  const data = localStorage.getItem('calendarWorkers');
-  return data ? JSON.parse(data) : { workers: [], availability: {} };
-}
-
-function saveState(state) {
-  localStorage.setItem('calendarWorkers', JSON.stringify(state));
-}
-
-let state = loadState();
-let selectedWorker = null;
-let calendarMonth = (new Date()).getMonth();
-let calendarYear = (new Date()).getFullYear();
-
-// --- Worker List Rendering ---
-function renderWorkerList() {
-  const ul = document.getElementById('worker-list');
-  ul.innerHTML = '';
-  state.workers.forEach((w, idx) => {
-    const li = document.createElement('li');
-    li.className = (selectedWorker === w) ? 'selected-worker' : '';
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'worker-name';
-    nameSpan.textContent = w;
-    nameSpan.onclick = () => {
-      selectedWorker = w;
-      renderWorkerList();
-      renderCalendarGrid();
-    };
-    li.appendChild(nameSpan);
-
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'remove-worker-btn';
-    removeBtn.textContent = '×';
-    removeBtn.title = 'Remove Worker';
-    removeBtn.onclick = () => {
-      if (confirm(`Remove worker "${w}" and all their data?`)) {
-        state.workers.splice(idx, 1);
-        // Remove their availability too
-        Object.keys(state.availability).forEach(key => {
-          if (key.endsWith('|' + w)) delete state.availability[key];
-        });
-        if (selectedWorker === w) selectedWorker = null;
-        saveState(state);
-        renderWorkerList();
-        renderCalendarGrid();
-      }
-    };
-    li.appendChild(removeBtn);
-
-    ul.appendChild(li);
+function renderUserSelect() {
+  userSelect.innerHTML = "";
+  users.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    userSelect.appendChild(opt);
   });
+  userSelect.value = selectedUser || "";
+  userSelect.style.display = users.length ? "" : "none";
 }
 
-// --- Calendar Grid Rendering ---
-function renderCalendarGrid() {
-  const grid = document.getElementById('calendar-grid');
-  grid.innerHTML = '';
+function renderCalendar() {
+  calendarDiv.innerHTML = "";
+
+  // Month/Year label
+  const monthName = new Date(viewYear, viewMonth).toLocaleString('default', { month: 'long', year: 'numeric' });
+  monthLabel.textContent = monthName;
+
+  // Calendar grid
+  const grid = document.createElement("div");
+  grid.className = "calendar-grid";
+
   // Headers
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   days.forEach(d => {
-    const div = document.createElement('div');
-    div.className = 'calendar-header';
-    div.textContent = d;
-    grid.appendChild(div);
+    const head = document.createElement("div");
+    head.className = "calendar-header";
+    head.textContent = d;
+    grid.appendChild(head);
   });
 
-  const firstDay = getFirstDayOfWeek(calendarMonth, calendarYear);
-  const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
+  // Days
+  const firstDate = new Date(viewYear, viewMonth, 1);
+  const firstDay = firstDate.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
   // Previous month's trailing days
-  const prevMonth = calendarMonth === 0 ? 11 : calendarMonth - 1;
-  const prevYear = calendarMonth === 0 ? calendarYear - 1 : calendarYear;
-  const prevMonthDays = getDaysInMonth(prevMonth, prevYear);
-
-  for (let i = 0; i < firstDay; i++) {
-    const div = document.createElement('div');
-    div.className = 'calendar-day other-month';
-    div.textContent = prevMonthDays - firstDay + 1 + i;
-    grid.appendChild(div);
-  }
-
-  // Current month's days
-  for (let d = 1; d <= daysInMonth; d++) {
-    const div = document.createElement('div');
-    div.className = 'calendar-day';
-    if (isToday(d, calendarMonth, calendarYear)) div.classList.add('today');
-    div.textContent = d;
-
-    if (selectedWorker) {
-      // Show availability badge if exists
-      const key = [calendarYear, calendarMonth, d, selectedWorker].join('|');
-      const avail = state.availability[key] || '';
-      if (avail) {
-        const badge = document.createElement('span');
-        badge.className = 'availability-badge';
-        badge.textContent = avail;
-        div.appendChild(document.createElement('br'));
-        div.appendChild(badge);
-      }
-      div.style.cursor = 'pointer';
-      div.onclick = () => openAvailabilityModal(d, calendarMonth, calendarYear);
-    } else {
-      div.style.opacity = 0.7;
-      div.title = 'Select a worker to edit/view availability';
+  let prevMonthDays = firstDay;
+  if (prevMonthDays > 0) {
+    // Fill in blanks for days before the 1st
+    for (let i = 0; i < prevMonthDays; i++) {
+      const blank = document.createElement("div");
+      blank.className = "calendar-day other";
+      grid.appendChild(blank);
     }
-    grid.appendChild(div);
   }
 
-  // Next month's leading days (to fill the grid)
-  const totalCells = firstDay + daysInMonth;
-  const nextDays = (7 - (totalCells % 7)) % 7;
-  for (let i = 1; i <= nextDays; i++) {
-    const div = document.createElement('div');
-    div.className = 'calendar-day other-month';
-    div.textContent = i;
-    grid.appendChild(div);
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "calendar-day";
+    dayDiv.textContent = d;
+
+    if (!selectedUser) {
+      dayDiv.style.opacity = 0.5;
+      dayDiv.title = "Select or add your name to mark availability";
+      grid.appendChild(dayDiv);
+      continue;
+    }
+
+    // Key is yyyy-mm-dd|username
+    const key = `${viewYear}-${(viewMonth+1).toString().padStart(2,"0")}-${d.toString().padStart(2,"0")}|${selectedUser}`;
+    if (avail[key]) {
+      const circle = document.createElement("span");
+      circle.className = "circle";
+      dayDiv.appendChild(circle);
+    }
+
+    // Toggle availability on click
+    dayDiv.onclick = () => {
+      avail[key] = !avail[key];
+      saveState();
+      renderCalendar();
+    };
+
+    grid.appendChild(dayDiv);
   }
+
+  // Trailing blanks for next month
+  let totalCells = firstDay + daysInMonth;
+  let nextBlanks = (7 - (totalCells % 7)) % 7;
+  for (let i = 0; i < nextBlanks; i++) {
+    const blank = document.createElement("div");
+    blank.className = "calendar-day other";
+    grid.appendChild(blank);
+  }
+
+  calendarDiv.appendChild(grid);
 }
 
-// --- Calendar Controls ---
-function updateCalendarHeader() {
-  document.getElementById('calendar-month').textContent = getMonthName(calendarMonth, calendarYear);
-}
+// --- EVENT LISTENERS ---
 
-document.getElementById('prev-month').onclick = () => {
-  calendarMonth--;
-  if (calendarMonth < 0) {
-    calendarMonth = 11;
-    calendarYear--;
-  }
-  updateCalendarHeader();
-  renderCalendarGrid();
-};
-document.getElementById('next-month').onclick = () => {
-  calendarMonth++;
-  if (calendarMonth > 11) {
-    calendarMonth = 0;
-    calendarYear++;
-  }
-  updateCalendarHeader();
-  renderCalendarGrid();
-};
-
-// --- Worker Add ---
-document.getElementById('add-worker-btn').onclick = () => {
-  const input = document.getElementById('worker-name-input');
-  const name = input.value.trim();
+addNameBtn.onclick = () => {
+  const name = nameInput.value.trim();
   if (!name) return;
-  if (state.workers.includes(name)) {
-    alert('Worker already exists.');
+  if (users.includes(name)) {
+    alert("Name already exists.");
     return;
   }
-  state.workers.push(name);
-  saveState(state);
-  input.value = '';
-  renderWorkerList();
-  renderCalendarGrid();
+  users.push(name);
+  selectedUser = name;
+  saveState();
+  renderUserSelect();
+  renderCalendar();
+  nameInput.value = "";
 };
 
-// --- Modal Logic ---
-function openAvailabilityModal(day, month, year) {
-  if (!selectedWorker) return;
-  document.getElementById('modal-background').classList.remove('hidden');
-  document.getElementById('modal-title').textContent = `Set Availability for ${selectedWorker} on ${getMonthName(month, year)} ${day}`;
-  const key = [year, month, day, selectedWorker].join('|');
-  document.getElementById('availability-input').value = state.availability[key] || '';
-  document.getElementById('save-availability-btn').onclick = () => {
-    const val = document.getElementById('availability-input').value.trim();
-    if (val) {
-      state.availability[key] = val;
-    } else {
-      delete state.availability[key];
-    }
-    saveState(state);
-    closeModal();
-    renderCalendarGrid();
-  };
-  document.getElementById('cancel-availability-btn').onclick = closeModal;
-}
+userSelect.onchange = () => {
+  selectedUser = userSelect.value;
+  renderCalendar();
+};
 
-function closeModal() {
-  document.getElementById('modal-background').classList.add('hidden');
-}
+prevMonthBtn.onclick = () => {
+  let m = viewMonth - 1, y = viewYear;
+  if (m < 0) { m = 11; y--; }
+  if (monthYearInRange(y, m)) {
+    viewMonth = m; viewYear = y;
+    renderCalendar();
+  }
+};
 
-// --- Initial Render ---
-updateCalendarHeader();
-renderWorkerList();
-renderCalendarGrid();
+nextMonthBtn.onclick = () => {
+  let m = viewMonth + 1, y = viewYear;
+  if (m > 11) { m = 0; y++; }
+  if (monthYearInRange(y, m)) {
+    viewMonth = m; viewYear = y;
+    renderCalendar();
+  }
+};
+
+// --- INIT ---
+renderUserSelect();
+renderCalendar();
