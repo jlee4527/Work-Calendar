@@ -1,18 +1,77 @@
-// --- CONFIGURATION ---
-const START_YEAR = 2025;
-const START_MONTH = 7; // 0-indexed, so 7 = August
-const END_YEAR = 2026;
-const END_MONTH = 7; // 0-indexed, so 7 = August
+// --- ADMIN LOGIN LOGIC ---
+const ADMIN_USERNAME = "adminsurah456";
+const ADMIN_PASSWORD = "@MtAiry38146";
 
-// --- STATE ---
+const loginBtn = document.getElementById("login-btn");
+const logoutBtn = document.getElementById("logout-btn");
+const loginForm = document.getElementById("login-form");
+const adminUsernameSpan = document.getElementById("admin-username");
+
+function isAdminLoggedIn() {
+  return localStorage.getItem("isAdmin") === "true";
+}
+
+function setAdminLoginState(state) {
+  localStorage.setItem("isAdmin", state ? "true" : "false");
+  updateLoginUI();
+  updateEditPermissions();
+  renderCalendar();
+  renderUserSelect();
+}
+
+function updateLoginUI() {
+  if (isAdminLoggedIn()) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "";
+    adminUsernameSpan.style.display = "";
+    adminUsernameSpan.textContent = ADMIN_USERNAME;
+    loginForm.style.display = "none";
+  } else {
+    loginBtn.style.display = "";
+    logoutBtn.style.display = "none";
+    adminUsernameSpan.style.display = "none";
+    loginForm.style.display = "none";
+  }
+}
+
+function updateEditPermissions() {
+  document.querySelectorAll(".admin-only").forEach(el => {
+    el.style.display = isAdminLoggedIn() ? "" : "none";
+  });
+}
+
+// --- LOGIN EVENT LISTENERS ---
+loginBtn.addEventListener("click", () => {
+  loginForm.style.display = loginForm.style.display === "block" ? "none" : "block";
+});
+logoutBtn.addEventListener("click", () => {
+  setAdminLoginState(false);
+});
+loginForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    setAdminLoginState(true);
+    loginForm.reset();
+  } else {
+    alert("Invalid credentials.");
+  }
+});
+
+// --- CALENDAR LOGIC ---
+const START_YEAR = 2025;
+const START_MONTH = 7; // August
+const END_YEAR = 2026;
+const END_MONTH = 7;
+
 let users = JSON.parse(localStorage.getItem("users") || "[]");
 let avail = JSON.parse(localStorage.getItem("availability") || "{}");
 let selectedUser = users.length ? users[0] : null;
-
 let viewYear = START_YEAR;
 let viewMonth = START_MONTH;
 
-// --- DOM ELEMENTS ---
+// DOM Elements
 const nameInput = document.getElementById("name-input");
 const addNameBtn = document.getElementById("add-name-btn");
 const userSelect = document.getElementById("user-select");
@@ -21,8 +80,6 @@ const monthLabel = document.getElementById("month-label");
 const prevMonthBtn = document.getElementById("prev-month-btn");
 const nextMonthBtn = document.getElementById("next-month-btn");
 const calendarDiv = document.getElementById("calendar");
-
-// --- FUNCTIONS ---
 
 function monthYearInRange(year, month) {
   if (year < START_YEAR || year > END_YEAR) return false;
@@ -46,7 +103,7 @@ function renderUserSelect() {
   });
   userSelect.value = selectedUser || "";
   userSelect.style.display = users.length ? "" : "none";
-  removeNameBtn.style.display = users.length ? "" : "none";
+  // Remove button is only shown for admin in updateEditPermissions
 }
 
 function renderCalendar() {
@@ -77,7 +134,6 @@ function renderCalendar() {
   // Previous month's trailing days
   let prevMonthDays = firstDay;
   if (prevMonthDays > 0) {
-    // Fill in blanks for days before the 1st
     for (let i = 0; i < prevMonthDays; i++) {
       const blank = document.createElement("div");
       blank.className = "calendar-day other";
@@ -85,7 +141,6 @@ function renderCalendar() {
     }
   }
 
-  // Current month days
   for (let d = 1; d <= daysInMonth; d++) {
     const dayDiv = document.createElement("div");
     dayDiv.className = "calendar-day";
@@ -93,12 +148,11 @@ function renderCalendar() {
 
     if (!selectedUser) {
       dayDiv.style.opacity = 0.5;
-      dayDiv.title = "Select or add your name to mark availability";
+      dayDiv.title = "Select a name to view availability";
       grid.appendChild(dayDiv);
       continue;
     }
 
-    // Key is yyyy-mm-dd|username
     const key = `${viewYear}-${(viewMonth+1).toString().padStart(2,"0")}-${d.toString().padStart(2,"0")}|${selectedUser}`;
     if (avail[key]) {
       const circle = document.createElement("span");
@@ -106,12 +160,18 @@ function renderCalendar() {
       dayDiv.appendChild(circle);
     }
 
-    // Toggle availability on click
-    dayDiv.onclick = () => {
-      avail[key] = !avail[key];
-      saveState();
-      renderCalendar();
-    };
+    // Only admin can toggle availability
+    if (isAdminLoggedIn()) {
+      dayDiv.style.cursor = "pointer";
+      dayDiv.onclick = () => {
+        avail[key] = !avail[key];
+        saveState();
+        renderCalendar();
+      };
+    } else {
+      dayDiv.style.cursor = "not-allowed";
+      dayDiv.onclick = null;
+    }
 
     grid.appendChild(dayDiv);
   }
@@ -128,63 +188,84 @@ function renderCalendar() {
   calendarDiv.appendChild(grid);
 }
 
-// --- EVENT LISTENERS ---
-
-addNameBtn.onclick = () => {
-  const name = nameInput.value.trim();
-  if (!name) return;
-  if (users.includes(name)) {
-    alert("Name already exists.");
-    return;
-  }
-  users.push(name);
-  selectedUser = name;
-  saveState();
-  renderUserSelect();
-  renderCalendar();
-  nameInput.value = "";
-};
-
-userSelect.onchange = () => {
-  selectedUser = userSelect.value;
-  renderCalendar();
-};
-
-removeNameBtn.onclick = () => {
-  if (!selectedUser) return;
-  if (!confirm(`Remove "${selectedUser}" and all their availability?`)) return;
-  // Remove user
-  users = users.filter(u => u !== selectedUser);
-  // Remove all availability for this user
-  Object.keys(avail).forEach(key => {
-    if (key.endsWith(`|${selectedUser}`)) {
-      delete avail[key];
+// --- CALENDAR EVENT LISTENERS ---
+if (addNameBtn) {
+  addNameBtn.onclick = () => {
+    if (!isAdminLoggedIn()) return;
+    const name = nameInput.value.trim();
+    if (!name) return;
+    if (users.includes(name)) {
+      alert("Name already exists.");
+      return;
     }
-  });
-  selectedUser = users.length ? users[0] : null;
-  saveState();
-  renderUserSelect();
-  renderCalendar();
-};
-
-prevMonthBtn.onclick = () => {
-  let m = viewMonth - 1, y = viewYear;
-  if (m < 0) { m = 11; y--; }
-  if (monthYearInRange(y, m)) {
-    viewMonth = m; viewYear = y;
+    users.push(name);
+    selectedUser = name;
+    saveState();
+    renderUserSelect();
     renderCalendar();
-  }
-};
+    nameInput.value = "";
+  };
+}
 
-nextMonthBtn.onclick = () => {
-  let m = viewMonth + 1, y = viewYear;
-  if (m > 11) { m = 0; y++; }
-  if (monthYearInRange(y, m)) {
-    viewMonth = m; viewYear = y;
+if (userSelect) {
+  userSelect.onchange = () => {
+    selectedUser = userSelect.value;
     renderCalendar();
-  }
-};
+  };
+}
+
+if (removeNameBtn) {
+  removeNameBtn.onclick = () => {
+    if (!isAdminLoggedIn()) return;
+    if (!selectedUser) return;
+    if (!confirm(`Remove "${selectedUser}" and all their availability?`)) return;
+    users = users.filter(u => u !== selectedUser);
+    Object.keys(avail).forEach(key => {
+      if (key.endsWith(`|${selectedUser}`)) {
+        delete avail[key];
+      }
+    });
+    selectedUser = users.length ? users[0] : null;
+    saveState();
+    renderUserSelect();
+    renderCalendar();
+  };
+}
+
+if (prevMonthBtn) {
+  prevMonthBtn.onclick = () => {
+    let m = viewMonth - 1, y = viewYear;
+    if (m < 0) { m = 11; y--; }
+    if (monthYearInRange(y, m)) {
+      viewMonth = m; viewYear = y;
+      renderCalendar();
+    }
+  };
+}
+
+if (nextMonthBtn) {
+  nextMonthBtn.onclick = () => {
+    let m = viewMonth + 1, y = viewYear;
+    if (m > 11) { m = 0; y++; }
+    if (monthYearInRange(y, m)) {
+      viewMonth = m; viewYear = y;
+      renderCalendar();
+    }
+  };
+}
 
 // --- INIT ---
+updateLoginUI();
+updateEditPermissions();
 renderUserSelect();
 renderCalendar();
+
+// Listen for login/logout updates (in case of multiple tabs)
+window.addEventListener('storage', function(e) {
+  if (e.key === "isAdmin") {
+    updateLoginUI();
+    updateEditPermissions();
+    renderCalendar();
+    renderUserSelect();
+  }
+});
