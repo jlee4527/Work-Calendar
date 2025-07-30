@@ -90,9 +90,57 @@ h1 {
   border-radius: 4px;
 }
 
-#add-name-btn {
+#add-name-btn, #remove-name-btn {
   padding: 5px 10px;
   border-radius: 4px;
   font-size: 15px;
   cursor: pointer;
+}
+
+#remove-name-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+}
+
+.logo-container {
+  position: relative;
+  width: 488px;
+  max-width: 90vw;
+  margin: 40px auto 0 auto;
+  text-align: center;
+}
+
+#surah-logo {
+  width: 100%;
+  height: auto;
+  filter: brightness(0) invert(0);
+  display: block;
+  margin: 0 auto;
+}
+
+.surah-overlay-text {
+  position: absolute;
+  left: 74px;
+  top: 10px;
+  font-family: Impact, "Arial Black", Arial, sans-serif;
+  font-size: 68px;
+  letter-spacing: 4px;
+  color: #111;
+  font-weight: bold;
+  pointer-events: none;
+  user-select: none;
+}
+
+.surah-subtext {
+  position: absolute;
+  left: 110px;
+  top: 70px;
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  color: #111;
+  font-weight: bold;
+  letter-spacing: 2px;
+  pointer-events: none;
+  user-select: none;
 }
