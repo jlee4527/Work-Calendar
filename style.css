@@ -1,0 +1,76 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f8f9fa;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#worker-form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+#worker-form input {
+  padding: 8px;
+  font-size: 16px;
+}
+
+#worker-form button {
+  padding: 8px 12px;
+  margin-left: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#calendar-container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: 20px;
+}
+
+table.calendar {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.calendar th, table.calendar td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+table.calendar th {
+  background: #f0f0f0;
+}
+
+.worker-row {
+  background: #f9f9f9;
+}
+
+input.availability-input {
+  width: 90%;
+  padding: 3px;
+  font-size: 14px;
+}
+
+.edit-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.edit-btn:hover {
+  background: #0056b3;
+}
