@@ -103,7 +103,6 @@ function renderUserSelect() {
   });
   userSelect.value = selectedUser || "";
   userSelect.style.display = users.length ? "" : "none";
-  // Remove button is only shown for admin in updateEditPermissions
 }
 
 function renderCalendar() {
@@ -131,7 +130,6 @@ function renderCalendar() {
   const firstDay = firstDate.getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-  // Previous month's trailing days
   let prevMonthDays = firstDay;
   if (prevMonthDays > 0) {
     for (let i = 0; i < prevMonthDays; i++) {
@@ -176,7 +174,6 @@ function renderCalendar() {
     grid.appendChild(dayDiv);
   }
 
-  // Trailing blanks for next month
   let totalCells = firstDay + daysInMonth;
   let nextBlanks = (7 - (totalCells % 7)) % 7;
   for (let i = 0; i < nextBlanks; i++) {
@@ -260,7 +257,7 @@ updateEditPermissions();
 renderUserSelect();
 renderCalendar();
 
-// Listen for login/logout updates (in case of multiple tabs)
+// Listen for login/logout updates from other tabs
 window.addEventListener('storage', function(e) {
   if (e.key === "isAdmin") {
     updateLoginUI();
