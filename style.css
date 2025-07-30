@@ -1,76 +1,208 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f8f9fa;
-  margin: 0;
-  padding: 20px;
+// --- Helpers for date calculations ---
+function getMonthName(month, year) {
+  return new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
 }
 
-h1 {
-  text-align: center;
+function getDaysInMonth(month, year) {
+  return new Date(year, month + 1, 0).getDate();
 }
 
-#worker-form {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30px;
+function getFirstDayOfWeek(month, year) {
+  return new Date(year, month, 1).getDay();
 }
 
-#worker-form input {
-  padding: 8px;
-  font-size: 16px;
+function isToday(day, month, year) {
+  const now = new Date();
+  return day === now.getDate() && month === now.getMonth() && year === now.getFullYear();
 }
 
-#worker-form button {
-  padding: 8px 12px;
-  margin-left: 10px;
-  font-size: 16px;
-  cursor: pointer;
+// --- State and Storage ---
+function loadState() {
+  const data = localStorage.getItem('calendarWorkers');
+  return data ? JSON.parse(data) : { workers: [], availability: {} };
 }
 
-#calendar-container {
-  max-width: 900px;
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  padding: 20px;
+function saveState(state) {
+  localStorage.setItem('calendarWorkers', JSON.stringify(state));
 }
 
-table.calendar {
-  width: 100%;
-  border-collapse: collapse;
+let state = loadState();
+let selectedWorker = null;
+let calendarMonth = (new Date()).getMonth();
+let calendarYear = (new Date()).getFullYear();
+
+// --- Worker List Rendering ---
+function renderWorkerList() {
+  const ul = document.getElementById('worker-list');
+  ul.innerHTML = '';
+  state.workers.forEach((w, idx) => {
+    const li = document.createElement('li');
+    li.className = (selectedWorker === w) ? 'selected-worker' : '';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'worker-name';
+    nameSpan.textContent = w;
+    nameSpan.onclick = () => {
+      selectedWorker = w;
+      renderWorkerList();
+      renderCalendarGrid();
+    };
+    li.appendChild(nameSpan);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-worker-btn';
+    removeBtn.textContent = '×';
+    removeBtn.title = 'Remove Worker';
+    removeBtn.onclick = () => {
+      if (confirm(`Remove worker "${w}" and all their data?`)) {
+        state.workers.splice(idx, 1);
+        // Remove their availability too
+        Object.keys(state.availability).forEach(key => {
+          if (key.endsWith('|' + w)) delete state.availability[key];
+        });
+        if (selectedWorker === w) selectedWorker = null;
+        saveState(state);
+        renderWorkerList();
+        renderCalendarGrid();
+      }
+    };
+    li.appendChild(removeBtn);
+
+    ul.appendChild(li);
+  });
 }
 
-table.calendar th, table.calendar td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+// --- Calendar Grid Rendering ---
+function renderCalendarGrid() {
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = '';
+  // Headers
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  days.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'calendar-header';
+    div.textContent = d;
+    grid.appendChild(div);
+  });
+
+  const firstDay = getFirstDayOfWeek(calendarMonth, calendarYear);
+  const daysInMonth = getDaysInMonth(calendarMonth, calendarYear);
+
+  // Previous month's trailing days
+  const prevMonth = calendarMonth === 0 ? 11 : calendarMonth - 1;
+  const prevYear = calendarMonth === 0 ? calendarYear - 1 : calendarYear;
+  const prevMonthDays = getDaysInMonth(prevMonth, prevYear);
+
+  for (let i = 0; i < firstDay; i++) {
+    const div = document.createElement('div');
+    div.className = 'calendar-day other-month';
+    div.textContent = prevMonthDays - firstDay + 1 + i;
+    grid.appendChild(div);
+  }
+
+  // Current month's days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const div = document.createElement('div');
+    div.className = 'calendar-day';
+    if (isToday(d, calendarMonth, calendarYear)) div.classList.add('today');
+    div.textContent = d;
+
+    if (selectedWorker) {
+      // Show availability badge if exists
+      const key = [calendarYear, calendarMonth, d, selectedWorker].join('|');
+      const avail = state.availability[key] || '';
+      if (avail) {
+        const badge = document.createElement('span');
+        badge.className = 'availability-badge';
+        badge.textContent = avail;
+        div.appendChild(document.createElement('br'));
+        div.appendChild(badge);
+      }
+      div.style.cursor = 'pointer';
+      div.onclick = () => openAvailabilityModal(d, calendarMonth, calendarYear);
+    } else {
+      div.style.opacity = 0.7;
+      div.title = 'Select a worker to edit/view availability';
+    }
+    grid.appendChild(div);
+  }
+
+  // Next month's leading days (to fill the grid)
+  const totalCells = firstDay + daysInMonth;
+  const nextDays = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= nextDays; i++) {
+    const div = document.createElement('div');
+    div.className = 'calendar-day other-month';
+    div.textContent = i;
+    grid.appendChild(div);
+  }
 }
 
-table.calendar th {
-  background: #f0f0f0;
+// --- Calendar Controls ---
+function updateCalendarHeader() {
+  document.getElementById('calendar-month').textContent = getMonthName(calendarMonth, calendarYear);
 }
 
-.worker-row {
-  background: #f9f9f9;
+document.getElementById('prev-month').onclick = () => {
+  calendarMonth--;
+  if (calendarMonth < 0) {
+    calendarMonth = 11;
+    calendarYear--;
+  }
+  updateCalendarHeader();
+  renderCalendarGrid();
+};
+document.getElementById('next-month').onclick = () => {
+  calendarMonth++;
+  if (calendarMonth > 11) {
+    calendarMonth = 0;
+    calendarYear++;
+  }
+  updateCalendarHeader();
+  renderCalendarGrid();
+};
+
+// --- Worker Add ---
+document.getElementById('add-worker-btn').onclick = () => {
+  const input = document.getElementById('worker-name-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.workers.includes(name)) {
+    alert('Worker already exists.');
+    return;
+  }
+  state.workers.push(name);
+  saveState(state);
+  input.value = '';
+  renderWorkerList();
+  renderCalendarGrid();
+};
+
+// --- Modal Logic ---
+function openAvailabilityModal(day, month, year) {
+  if (!selectedWorker) return;
+  document.getElementById('modal-background').classList.remove('hidden');
+  document.getElementById('modal-title').textContent = `Set Availability for ${selectedWorker} on ${getMonthName(month, year)} ${day}`;
+  const key = [year, month, day, selectedWorker].join('|');
+  document.getElementById('availability-input').value = state.availability[key] || '';
+  document.getElementById('save-availability-btn').onclick = () => {
+    const val = document.getElementById('availability-input').value.trim();
+    if (val) {
+      state.availability[key] = val;
+    } else {
+      delete state.availability[key];
+    }
+    saveState(state);
+    closeModal();
+    renderCalendarGrid();
+  };
+  document.getElementById('cancel-availability-btn').onclick = closeModal;
 }
 
-input.availability-input {
-  width: 90%;
-  padding: 3px;
-  font-size: 14px;
+function closeModal() {
+  document.getElementById('modal-background').classList.add('hidden');
 }
 
-.edit-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 4px 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-left: 5px;
-}
-
-.edit-btn:hover {
-  background: #0056b3;
-}
+// --- Initial Render ---
+updateCalendarHeader();
+renderWorkerList();
+renderCalendarGrid();
