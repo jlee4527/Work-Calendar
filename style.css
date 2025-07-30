@@ -21,21 +21,6 @@ h1 {
   color: #fff;
 }
 
-#user-select, #add-name-btn, #remove-name-btn, #name-input {
-  background: #222;
-  color: #fff;
-  border: 1px solid #444;
-  border-radius: 4px;
-  padding: 5px 8px;
-  font-size: 15px;
-}
-
-#remove-name-btn {
-  background: #e74c3c;
-  color: #fff;
-  border: none;
-}
-
 #calendar-controls {
   display: flex;
   justify-content: center;
@@ -45,24 +30,10 @@ h1 {
   color: #fff;
 }
 
-#calendar-controls span,
-#calendar-controls button {
-  color: #fff;
-  background: #222;
-  border: 1px solid #444;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 16px;
-}
-
-#calendar-controls button {
-  cursor: pointer;
-}
-
 #calendar {
   max-width: 420px;
   margin: 0 auto;
-  background: #181818;
+  background: #222;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.12);
   padding: 16px;
@@ -78,7 +49,7 @@ h1 {
 .calendar-header {
   text-align: center;
   font-weight: bold;
-  background: #222;
+  background: #333;
   padding: 7px 0;
   border-radius: 4px;
   color: #fff;
@@ -118,6 +89,31 @@ h1 {
   background: #49c36c;
   margin: 7px auto 0 auto;
   display: inline-block;
+}
+
+#user-select {
+  font-size: 15px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #181818;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+#add-name-btn, #remove-name-btn {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 15px;
+  cursor: pointer;
+  background: #222;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+#remove-name-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
 }
 
 .logo-container {
