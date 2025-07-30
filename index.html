@@ -8,11 +8,35 @@
 </head>
 <body>
   <h1>Team Work Calendar</h1>
-  <div id="worker-form">
-    <input type="text" id="worker-name-input" placeholder="Enter worker's name">
-    <button id="add-worker-btn">Add Worker</button>
+  <div id="app-container">
+    <div id="worker-section">
+      <h2>Workers</h2>
+      <input type="text" id="worker-name-input" placeholder="Enter worker's name">
+      <button id="add-worker-btn">Add Worker</button>
+      <ul id="worker-list"></ul>
+    </div>
+    <div id="calendar-section">
+      <div id="calendar-controls">
+        <button id="prev-month">&lt;</button>
+        <span id="calendar-month"></span>
+        <button id="next-month">&gt;</button>
+      </div>
+      <div id="calendar-grid"></div>
+    </div>
   </div>
-  <div id="calendar-container"></div>
+  <div id="modal-background" class="hidden">
+    <div id="availability-modal">
+      <h3 id="modal-title"></h3>
+      <label>
+        Availability:
+        <input type="text" id="availability-input" placeholder="e.g., 9am-5pm, Off, etc.">
+      </label>
+      <div id="modal-buttons">
+        <button id="save-availability-btn">Save</button>
+        <button id="cancel-availability-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script src="script.js"></script>
 </body>
 </html>
