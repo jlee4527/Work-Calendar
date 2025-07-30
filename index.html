@@ -4,9 +4,19 @@
   <meta charset="UTF-8">
   <title>Work Calendar</title>
   <style>
+    body { font-family: Arial, sans-serif; background: #fafbfc; }
     #login-section { position: absolute; top: 10px; right: 10px; }
     #login-form { display: none; background: #fff; padding: 10px; border: 1px solid #ccc; }
     #logout-btn { display: none; }
+    #calendar-section { max-width: 800px; margin: 60px auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+    #month-controls { margin-bottom: 16px; text-align: center; }
+    #user-controls { margin-bottom: 12px; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .calendar-header { font-weight: bold; text-align: center; padding: 8px 0; background: #eaecef; border-radius: 4px; }
+    .calendar-day { min-height: 48px; background: #f6f8fa; border-radius: 4px; text-align: center; line-height: 48px; font-size: 16px; position: relative; }
+    .calendar-day.other { background: #fff; }
+    .calendar-day .circle { display: inline-block; width: 16px; height: 16px; background: #3fb950; border-radius: 50%; vertical-align: middle; margin-left: 4px; }
+    #user-select, #name-input { padding: 4px; margin-right: 4px; }
     .admin-only { display: none; }
   </style>
 </head>
@@ -21,36 +31,21 @@
       <button type="submit">Login</button>
     </form>
   </div>
-
-  <!-- Calendar and Availability: ALWAYS VISIBLE -->
   <div id="calendar-section">
     <h1>Work Calendar</h1>
-    <!-- Your calendar rendering here -->
-    <div id="calendar">
-      <!-- Example calendar table (replace with your real calendar code) -->
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Monday</th>
-            <th>Tuesday</th>
-            <th>...</th>
-          </tr>
-        </thead>
-        <tbody id="calendar-body">
-          <!-- Calendar data populated by app.js -->
-        </tbody>
-      </table>
+    <div id="month-controls">
+      <button id="prev-month-btn">&lt;</button>
+      <span id="month-label"></span>
+      <button id="next-month-btn">&gt;</button>
     </div>
-    <!-- Admin-only controls (hidden for non-admins) -->
-    <div class="admin-only" id="admin-controls">
-      <button id="edit-btn">Edit Availability</button>
-      <button id="add-btn">Add Name</button>
-      <button id="remove-btn">Remove Name</button>
-      <!-- more admin controls as needed -->
+    <div id="user-controls">
+      <select id="user-select"></select>
+      <input id="name-input" placeholder="Add name">
+      <button id="add-name-btn" class="admin-only">Add</button>
+      <button id="remove-name-btn" class="admin-only">Remove</button>
     </div>
+    <div id="calendar"></div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
