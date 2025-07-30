@@ -104,43 +104,31 @@ h1 {
 }
 
 .logo-container {
-  position: relative;
-  width: 488px;
-  max-width: 90vw;
   margin: 40px auto 0 auto;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 #surah-logo {
+  max-width: 270px;
   width: 100%;
   height: auto;
-  filter: brightness(0) invert(0);
   display: block;
   margin: 0 auto;
 }
 
-.surah-overlay-text {
-  position: absolute;
-  left: 74px;
-  top: 10px;
+.surah-black-text {
   font-family: Impact, "Arial Black", Arial, sans-serif;
-  font-size: 68px;
+  font-size: 60px;
   letter-spacing: 4px;
   color: #111;
   font-weight: bold;
+  margin-top: -42px; /* Pulls the black SURAH up to overlap white text */
+  margin-bottom: 0;
+  background: none;
   pointer-events: none;
   user-select: none;
-}
-
-.surah-subtext {
-  position: absolute;
-  left: 110px;
-  top: 70px;
-  font-family: Arial, sans-serif;
-  font-size: 22px;
-  color: #111;
-  font-weight: bold;
-  letter-spacing: 2px;
-  pointer-events: none;
-  user-select: none;
+  line-height: 1;
 }
